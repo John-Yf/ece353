@@ -4,25 +4,21 @@
 #include "common.h"
 #include "wc.h"
 #include <string.h>
+#include <ctype.h>
 
-#define INITIAL_TABLE_SIZE 1024
 
 struct wc {
-	/* you can define this struct to have whatever fields you want. */
-	struct wc_entry *table; // pointer to the hash table (array of wc_entry)
-	long table_size; // size of the hash table
-	int num_entries; // number of entries in the hash table
-};
-
-struct wc_entry{
-	char *word; // stores the word as a string; serves as the key
-	int count;  // stores the number of occurences of the word; serves as the value 
-	int occupied;  // 0 = empty; 1 = occupied; -1 = deleted
+	/*you can define this struct to have whatever fields you want.*/
+	long capacity; // capacity of the wc structure
+	int size;     // number of unique words stored
+	char **keys;  // array of pointers to unique words
+	int *counts;  // array of counts corresponding to each unique word -- counts[i] is the count for keys[i]
+	long max; // last index used in keys and counts arrays
 };
 
 // Hash function to compute index for a given word 
 // djb2 hash function (http://www.cse.yorku.ca/~oz/hash.html)
-unsigned long hash(char*str){
+unsigned long hash(const char *str){
 	unsigned long hash = 5381;
 	int c;
 
