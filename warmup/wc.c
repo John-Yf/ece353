@@ -6,19 +6,24 @@
 #include <string.h>
 #include <ctype.h>
 
+#define INITIAL_TABLE_SIZE 1024
 
 struct wc {
-	/*you can define this struct to have whatever fields you want.*/
-	long capacity; // capacity of the wc structure
-	int size;     // number of unique words stored
-	char **keys;  // array of pointers to unique words
-	int *counts;  // array of counts corresponding to each unique word -- counts[i] is the count for keys[i]
-	long max; // last index used in keys and counts arrays
+	/* you can define this struct to have whatever fields you want. */
+	struct wc_entry *table; // pointer to the hash table (array of wc_entry)
+	long table_size; // size of the hash table
+	int num_entries; // number of entries in the hash table
+};
+
+struct wc_entry{
+	char *word; // stores the word as a string; serves as the key
+	int count;  // stores the number of occurences of the word; serves as the value 
+	int occupied;  // 0 = empty; 1 = occupied; -1 = deleted
 };
 
 // Hash function to compute index for a given word 
 // djb2 hash function (http://www.cse.yorku.ca/~oz/hash.html)
-unsigned long hash(const char *str){
+unsigned long hash(char*str){
 	unsigned long hash = 5381;
 	int c;
 
@@ -57,7 +62,7 @@ struct wc * wc_init(char *word_array, long size)
 	long i = 0;
 	while (i < size){
 		// Skip whitespace characters
-		while (i < size && isspace(word_array[i])){
+		while (i < size && isspace((unsigned char)word_array[i])){
 			i++;
 		}
 		
@@ -65,7 +70,7 @@ struct wc * wc_init(char *word_array, long size)
 
 		// parse word_array for each word and use isspace() to identify when a word ends 
 		long start = i; // starting index of the word
-		while (i < size && !isspace(word_array[i])){
+		while (i < size && !isspace((unsigned char)word_array[i])){
 			i++;
 		}
 		long end = i; // ending index of the word
@@ -75,7 +80,7 @@ struct wc * wc_init(char *word_array, long size)
 		if (word_length == 0) continue; // skip if no word found
 
 		char *word = (char *)malloc(word_length + 1); // +1 for null terminator
-		// assert(word); // ensure memory allocation was successful
+		assert(word); // ensure memory allocation was successful
 		strncpy(word, &word_array[start], word_length);
 		word[word_length] = '\0'; // null terminate the string
 
@@ -103,9 +108,9 @@ struct wc * wc_init(char *word_array, long size)
 			}
 
 		}
-
-	return wc;
 	}
+	return wc;
+	
 }
 
 void
